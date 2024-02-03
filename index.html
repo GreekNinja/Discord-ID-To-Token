@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Convert Discord User ID to Token">
+    <meta name="author" content="@greekninja30">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 50px;
+            transition: background-color 0.5s, color 0.5s;
+            touch-action: none; /* Disable pinch-to-zoom */
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 30px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        label {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        input {
+            padding: 8px;
+            font-size: 1em;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #61dafb;
+            color: #282c34;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #45aaf2;
+        }
+
+        #encodedResult {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+
+        #loading {
+            display: none;
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #45aaf2;
+        }
+
+        #visitCount {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #45aaf2;
+            animation: countUp 1s ease-out;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes countUp {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #loading::before {
+            content: '⚙️';
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+
+        .emoji {
+            font-size: 1.5em;
+            margin-right: 5px;
+        }
+
+        /* Custom styles for mobile */
+        @media (max-width: 600px) {
+            input {
+                width: 80%;
+            }
+        }
+
+        /* Dark mode styles */
+        body.dark-mode {
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+
+        /* Menu styles */
+        .menu {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            cursor: pointer;
+        }
+
+        .dropdown {
+            display: none;
+            position: absolute;
+            top: 30px;
+            left: 10px;
+            background-color: #282c34;
+            color: #61dafb;
+            border-radius: 5px;
+            padding: 10px;
+            z-index: 1;
+        }
+
+        .menu:hover .dropdown {
+            display: block;
+        }
+
+        .dropdown button {
+            display: block;
+            margin-bottom: 5px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu">
+        <div class="dropdown">
+            <button type="button" onclick="toggleDarkMode()">Darkmode ON/OFF🌙</button>
+        </div>
+        <span class="emoji" onclick="toggleMenu()">⚙️</span>
+    </div>
+    <h1>Discord ID To Token 🤖</h1>
+    <form id="encoderForm">
+        <label for="discordToken">Enter Discord User ID 🛡️:</label>
+        <input type="text" id="discordToken" name="discordToken" required>
+        <button type="button" onclick="encodeToken()">Encode 🔐</button>
+    </form>
+    <div id="loading"></div>
+    <div id="encodedResult"></div>
+    <div id="visitCount"></div>
+
+    <script>
+        function getIpAddress() {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', 'https://api.ipify.org?format=json', true);
+                xhr.onload = function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        const response = JSON.parse(xhr.responseText);
+                        resolve(response.ip);
+                    } else {
+                        reject(xhr.statusText);
+                    }
+                };
+                xhr.onerror = function() {
+                    reject(xhr.statusText);
+                };
+                xhr.send();
+            });
+        }
+
+        function hasVisitedBefore() {
+            const userIp = localStorage.getItem('userIp');
+            return userIp !== null;
+        }
+
+        function updateVisitCount() {
+            const visitCount = localStorage.getItem('visitCount') || 0;
+            document.getElementById('visitCount').innerHTML = '<p>Visits: <span class="count-up">' + visitCount + '</span> 🌐</p>';
+            document.querySelector('.count-up').classList.add('count-up-animation');
+        }
+
+        function recordVisit() {
+            const userIp = localStorage.getItem('userIp');
+            if (userIp === null) {
+                localStorage.setItem('userIp', 'recorded');
+                let visitCount = localStorage.getItem('visitCount') || 0;
+                visitCount++;
+                localStorage.setItem('visitCount', visitCount);
+                updateVisitCount();
+            }
+        }
+
+        function encodeToken() {
+            recordVisit();
+
+            const discordToken = document.getElementById('discordToken').value;
+            document.getElementById('loading').style.display = 'inline-block';
+            
+            setTimeout(function() {
+                const encodedToken = btoa(discordToken);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('encodedResult').innerHTML = '<p>User Token Here: ' + encodedToken + ' 🔒</p>';
+            }, 2000);
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        function toggleMenu() {
+            document.querySelector('.dropdown').classList.toggle('show');
+        }
+
+        updateVisitCount();
+
+        setInterval(function() {
+            if (document.visibilityState === 'visible') {
+                updateVisitCount();
+            }
+        }, 1);
+
+        // Disable pinch-to-zoom on touch devices
+        document.addEventListener('gesturestart', function (e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener('gesturechange', function (e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener('gestureend', function (e) {
+            e.preventDefault();
+        });
+    </script>
+
+    <footer>
+        <p>&copy; 2024 Discord ID To Token. All rights reserved. By @GreekNinja30</p>
+    </footer>
+</body>
+</html>
